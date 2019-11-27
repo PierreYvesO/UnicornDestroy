@@ -47,12 +47,12 @@ class player():
 			for i in aliens:
 				if i.x + 50 >= self.x and i.x <= self.x + 50 and i.y + 50 >= self.y \
 				and i.y <= self.y + 50:
-				self.hp = -1
+					self.hp = -1
 			for j in enemyProjectiles:
 				if j.x + 15 >= self.x and j.x <= self.x + 50 and j.y + 25 >= self.y \
 				and j.y <= self.y + 50:
-				self.hp -= 1
-				j.dead = True
+					self.hp -= 1
+					j.dead = True
 				if self.hp > 0:
 					j.yVel *= -1.25
 					j.y -= 50

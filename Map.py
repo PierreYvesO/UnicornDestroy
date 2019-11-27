@@ -6,7 +6,7 @@ from Mort import *
 from Alien import *
 from Joueur import *
 
-vague=1
+vague=5
 
 
 
@@ -93,7 +93,7 @@ class Application(tk.Frame):
 			for ent in self.rows[row] :
 
 				self.canvas[row].create_image(100+offset,100,image=img)
-				offset += 75
+				offset += 500
 				x+=25
 
 	def drawHero(self):
@@ -102,6 +102,6 @@ class Application(tk.Frame):
      
 root = tk.Tk()
 root.geometry("1920x1080")
-img = tk.PhotoImage(file='/user/miollanr/Téléchargements/TKINTER-Space-Invaders-master/UFOBoss.gif')
+img = tk.PhotoImage(file='/user/miollanr/Téléchargements/TKINTER-Space-Invaders-master/animagicalunicorn.gif')
 app = Application(master=root)
 app.mainloop()

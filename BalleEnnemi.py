@@ -1,3 +1,5 @@
+from Balle import *
+
 class BalleEnnemi(Balle):
 	def __init__(self, x, y, xVel, yVel, shotDown):
 		super().__init__(x, y, xVel, yVel)
