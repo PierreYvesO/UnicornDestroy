@@ -1,25 +1,68 @@
 import tkinter as tk
-
+from random import randint
 class Application(tk.Frame):
-    def __init__(self, master=None):
-        super().__init__(master)
-        self.master = master
-        self.pack()
-        self.create_widgets()
+	def __init__(self, master=None):
+		self.ennemies=list()
+		self.ennemies.append(100)
+		self.ennemies.append(100)
+		self.ennemies.append(100)
+		super().__init__(master)
+		self.master = master
+		self.pack(fill="both")
+		self.create_HPBAR()
+		self.create_MAIN()
+		self.init_ennemyList()
+		self.initEnnemies()
 
-    def create_widgets(self):
-        self.hi_there = tk.Button(self)
-        self.hi_there["text"] = "Hello World\n(click me)"
-        self.hi_there["command"] = self.say_hi
-        self.hi_there.pack(side="top")
+	def init_ennemyList(self):
+		self.rows = list()
+		self.rows.append(list())
+		self.rows.append(list())
+		self.rows.append(list())
+		self.rows.append(list())
+		self.rows.append(list())
 
-        self.quit = tk.Button(self, text="QUIT", fg="red",
-                              command=self.master.destroy)
-        self.quit.pack(side="bottom")
 
-    def say_hi(self):
-        print("hi there, everyone!")
+	def create_HPBAR(self):
+		hp_frame = tk.Frame(self,bg="black",height=50)
+		self.hp_canvas = tk.Canvas(hp_frame,width=1920, height=50)
+		self.hp_canvas.create_rectangle(0, 0, 1920, 50, fill="green")
+		self.hp_canvas.pack()
 
+		hp_frame.pack(side="top",fill="both",expand=False)
+
+
+	def create_MAIN(self):
+		self.canvas = list()
+		main_frame = tk.Frame(self,bg="RED",height=1030)
+		frameHeros = tk.Canvas(main_frame,bg="white",width=200,height=1000)
+		frameHeros.grid(column=0,row=0,rowspan=5)
+		self.canvas.append(tk.Canvas(main_frame,bg="pink",width=1920,height=200))
+		self.canvas[0].grid(column=1,row=0)
+		self.canvas.append(tk.Canvas(main_frame,bg="blue",width=1920,height=200))
+		self.canvas[1].grid(column=1,row=1)	
+		self.canvas.append(tk.Canvas(main_frame,bg="pink",width=1920,height=200))
+		self.canvas[2].grid(column=1,row=2)
+		self.canvas.append(tk.Canvas(main_frame,bg="blue",width=1920,height=200))
+		self.canvas[3].grid(column=1,row=3)
+		self.canvas.append(tk.Canvas(main_frame,bg="pink",width=1920,height=200))
+		self.canvas[4].grid(column=1,row=4)
+		main_frame.pack(side="bottom",fill="both",expand=True)
+
+
+	def initEnnemies(self):
+		for ennemy in self.ennemies:
+			i = randint(0, 4)
+			self.rows[i].append(ennemy)
+		
+	def drawEnnemies(self):
+		
+
+	def drawHero(self):
+		return 0
+	
+     
 root = tk.Tk()
+root.geometry("1920x1080")
 app = Application(master=root)
 app.mainloop()
