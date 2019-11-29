@@ -1,8 +1,5 @@
 import tkinter as tk
 from random import randint
-from Balle import *
-from BalleEnnemi import *
-from Mort import *
 from Alien import *
 from Joueur import *
 
