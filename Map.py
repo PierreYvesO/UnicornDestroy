@@ -66,50 +66,49 @@ class Application(tk.Frame):
 
     def create_MAIN(self):
         self.canvas = list()
-        main_frame = tk.Frame(self, bg="RED", height=1030)
-        self.frameHeros = tk.Canvas(main_frame, bg="white", width=200, height=1000)
-        self.frameHeros.grid(column=0, row=0, rowspan=5)
-        self.canvas.append(tk.Canvas(main_frame, bg="pink", width=1920, height=200))
-        self.canvas[0].grid(column=1, row=0)
-        self.canvas.append(tk.Canvas(main_frame, bg="blue", width=1920, height=200))
-        self.canvas[1].grid(column=1, row=1)
-        self.canvas.append(tk.Canvas(main_frame, bg="pink", width=1920, height=200))
-        self.canvas[2].grid(column=1, row=2)
-        self.canvas.append(tk.Canvas(main_frame, bg="blue", width=1920, height=200))
-        self.canvas[3].grid(column=1, row=3)
-        self.canvas.append(tk.Canvas(main_frame, bg="pink", width=1920, height=200))
-        self.canvas[4].grid(column=1, row=4)
-        main_frame.pack(side="bottom", fill="both", expand=True)
+        self.main_frame = tk.Frame(self, bg="RED")
+        self.frameHeros = tk.Canvas(self.main_frame, bd=0, highlightthickness=0,width=ship[0].width())
+        self.frameHeros.grid(column=0, row=0, rowspan=5, sticky="NS")
+        bg = background[0]
+        for i in range(5):
+            # self.canvas.append(tk.Canvas(self.main_frame, bg=bg[i % 2], bd=0, highlightthickness=0))
+            self.canvas.append(tk.Canvas(self.main_frame, bd=0, highlightthickness=0))
+            self.canvas[i].grid(column=1, row=i, sticky="WE")
+            tk.Grid.rowconfigure(self.main_frame, i, weight=1)
+        tk.Grid.columnconfigure(self.main_frame, 1, weight=1)
+        tk.Grid.columnconfigure(self.main_frame, 0, weight=0)
+
+        self.main_frame.pack(side="bottom", fill="both", expand=True)
 
     def moveDown(self, event):
-        x = self.hero.getPosX() + 200
-        if x < 1000:
+        x = self.hero.getPosX() + self.main_frame.winfo_height()/5
+        if x < self.main_frame.winfo_height():
             self.hero.setPosX(x)
             self.frameHeros.delete("all")
-            hero = self.frameHeros.create_image(90, x, image=ship[0])
+            hero = self.frameHeros.create_image(90, x)
             self.updategif(hero, self.frameHeros, ship)
 
     def moveUp(self, event):
-        x = self.hero.getPosX() - 200
+        x = self.hero.getPosX() - self.main_frame.winfo_height()/5
         if x > 0:
             self.hero.setPosX(x)
             self.frameHeros.delete("all")
-            hero = self.frameHeros.create_image(90, x, image=ship[0])
+            hero = self.frameHeros.create_image(90, x)
             self.updategif(hero, self.frameHeros, ship)
 
     def tir(self, event):
-        if 0 < self.hero.getPosX() < 210:
+        offset = self.main_frame.winfo_height() / 5
+        if 0 < self.hero.getPosX() < offset:
             row = 0
-        elif self.hero.getPosX() < 420:
+        elif self.hero.getPosX() < offset*2:
             row = 1
-        elif self.hero.getPosX() < 630:
+        elif self.hero.getPosX() < offset*3:
             row = 2
-        elif self.hero.getPosX() < 840:
+        elif self.hero.getPosX() < offset*4:
             row = 3
         else:
             row = 4
-
-        idballe = self.canvas[row].create_image(100, 100, image=bullet[0])
+        idballe = self.canvas[row].create_image(bullet[0].width()/2, self.canvas[row].winfo_height()/2)
         self.updategif(idballe, self.canvas[row], bullet)
         self.moveTir(idballe, self.canvas[row])
 
@@ -150,7 +149,7 @@ class Application(tk.Frame):
         self.updategif(hero, self.frameHeros, ship)
         return x, y
 
-    def updategif(self, idimg, canvas, img, img_offset=-1, time=-1):
+    def updategif(self, idimg, canvas, img, img_offset=-1, time=-1,looptime=200):
         if "dead" in canvas.gettags(idimg):
             if time == 10:
                 canvas.after(200, lambda: self.updategif(idimg, canvas, dead, time + 1))
@@ -162,19 +161,20 @@ class Application(tk.Frame):
             elif img_offset >= len(img):
                 img_offset = 0
             canvas.itemconfig(idimg, image=img[img_offset])
-            canvas.after(200, lambda: self.updategif(idimg, canvas, img, img_offset + 1))
+            canvas.after(looptime, lambda: self.updategif(idimg, canvas, img, img_offset + 1))
 
     def drawEnnemies(self):
         self.tags = list()
         for row in range(0, 5):
-            offset = 20 + randint(0, 10000)
+            offset = 20 + randint(0, 1000)
             x = 0
+            self.master.update()
             for ent in self.rows[row]:
-                idlic = self.canvas[row].create_image(1920 + offset, 100,tag="uni")
-                offset += 500 + randint(0, 5000)
+                idlic = self.canvas[row].create_image(1920 + offset, self.canvas[row].winfo_height()/2, tag="uni")
+                offset += 500 + randint(0, 2000)
                 x += 25
                 self.moveEnnemy(idlic, self.canvas[row], ent)
-                self.updategif(idlic, self.canvas[row], unicorn)
+                self.updategif(idlic, self.canvas[row], unicorn,looptime=50)
 
     def moveEnnemy(self, idlic, canvas, ent, img_offset=-1):
         if len(canvas.find_withtag(idlic)) == 1:
@@ -203,10 +203,11 @@ class Application(tk.Frame):
 
 root = tk.Tk()
 root.geometry("1920x1080")
-
-unicorn = [tk.PhotoImage(file='gif/uni.gif', format='gif -index %i' % i) for i in range(9)]
+root.config(cursor="none")
+unicorn = [tk.PhotoImage(file='gif/unireact.gif', format='gif -index %i' % i) for i in range(9)]
 ship = [tk.PhotoImage(file='gif/vaisseau.gif', format='gif -index %i' % i) for i in range(4)]
 bullet = [tk.PhotoImage(file='gif/balle.gif', format='gif -index %i' % i) for i in range(4)]
-dead = tk.PhotoImage(file='gif/dead.gif', )
+dead = tk.PhotoImage(file='gif/dead.gif')
+background = [tk.PhotoImage(file='gif/background.gif', format='gif -index %i' % i) for i in range(29)]
 app = Application(master=root)
 app.mainloop()
