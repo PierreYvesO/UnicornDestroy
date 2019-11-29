@@ -130,14 +130,12 @@ class Application(tk.Frame):
             canvas.move(idt, 10, 0)
             x, y = canvas.coords(idt)
             if x > canvas.winfo_width() - 250:
-                print("delete")
                 canvas.delete(idt)
             tpl = canvas.find_overlapping(x, y, x, y + 130)
 
             if len(tpl) > 1 and 'dead' not in canvas.gettags(tpl[0]):
                 if 'uni' in canvas.gettags(tpl[0]):
                     canvas.itemconfig(tpl[1], image=dead, tags="dead")
-                    print(canvas.gettags(tpl[1]))
                     canvas.delete(tpl[0])
                     self.updatePV(1)
                 else:
@@ -153,7 +151,6 @@ class Application(tk.Frame):
         return x, y
 
     def updategif(self, idimg, canvas, img, img_offset=-1, time=-1):
-        # print(canvas.gettags(idimg))
         if "dead" in canvas.gettags(idimg):
             if time == 10:
                 canvas.after(200, lambda: self.updategif(idimg, canvas, dead, time + 1))
@@ -200,7 +197,6 @@ class Application(tk.Frame):
         if self.pv + pvDIFF < 100:
             self.pv = self.pv + pvDIFF
             pv = self.pv / 100 * 1920
-            print(self.pv)
             self.hp_canvas.delete("all")
             self.hp_canvas.create_rectangle(0, 0, pv, 50, fill="green")
 
