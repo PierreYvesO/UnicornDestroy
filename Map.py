@@ -1,16 +1,18 @@
 import sys
 import tkinter as tk
 from random import randint
-
+from tkinter.messagebox import askretrycancel, askquestion
+import tkinter.font as tkFont
 from Alien import *
 from Joueur import *
 
 vague = 5
 pause = False
 
+
 class Application(tk.Frame):
     def __init__(self, master=None):
-        self.pv = 100
+
         sys.setrecursionlimit(10000)
         self.ennemies = list()
         super().__init__(master)
@@ -18,18 +20,23 @@ class Application(tk.Frame):
         self.pack(fill="both")
         self.create_HPBAR()
         self.create_MAIN()
-        self.hero = Joueur(95, 100)
-        self.mouvements()
-        self.eventTir()
+        self.init_game()
 
+        self.master.bind("<h>", self.help)
+        self.master.bind("<Escape>", self.end)
+        self.master.bind("<Return>", self.pause)
+
+    def init_game(self):
+        self.pause()
+        self.pv = 100
+        self.resetPV()
+        self.hero = Joueur(95, 100)
         self.init_ennemyList()
         self.vague(vague)
         self.initEnnemies()
         self.drawEnnemies()
         self.drawJoueur()
-        self.master.bind("<F11>", self.toggle_fullscreen)
-        self.master.bind("<Escape>", self.end_fullscreen)
-        self.master.bind("<Return>", self.pause)
+        self.displayCommands()
 
     def init_ennemyList(self):
         self.rows = list()
@@ -87,7 +94,7 @@ class Application(tk.Frame):
     def create_background(self, canvas):
         canvas.update()
         for i in range(randint(50, 50)):
-            x = randint(0, canvas.winfo_width() * 5)
+            x = randint(0, canvas.winfo_width() * 10)
             y = randint(0, canvas.winfo_height() - 60 * 2)
             w = randint(1, 5)
 
@@ -129,7 +136,7 @@ class Application(tk.Frame):
             hero = self.frameHeros.create_image(90, x)
             self.updategif(hero, self.frameHeros, ship)
 
-    def tir(self, event):
+    def tir(self, event=None):
         offset = self.main_frame.winfo_height() / 5
         if 0 < self.hero.getPosX() < offset:
             row = 0
@@ -146,12 +153,19 @@ class Application(tk.Frame):
         self.updategif(idballe, self.canvas[row], bullet, img_offset=0, noloop=True)
         self.moveTir(idballe, self.canvas[row])
 
-    def mouvements(self):
-        self.master.bind("<Down>", self.moveDown)
-        self.master.bind("<Up>", self.moveUp)
+    def mouvements(self, activate):
+        if activate:
+            self.master.bind("<Down>", self.moveDown)
+            self.master.bind("<Up>", self.moveUp)
+        else:
+            self.master.unbind("<Down>")
+            self.master.unbind("<Up>")
 
-    def eventTir(self):
-        self.master.bind("<space>", self.tir)
+    def eventTir(self, activate):
+        if activate:
+            self.master.bind("<space>", self.tir)
+        else:
+            self.master.unbind("<space>")
 
     def initEnnemies(self):
         for ennemy in self.ennemies:
@@ -161,7 +175,7 @@ class Application(tk.Frame):
     def moveTir(self, idt, canvas):
         if pause:
             canvas.after(10, lambda: self.moveTir(idt, canvas))
-        else :
+        else:
             if len(canvas.find_withtag(idt)) == 1:
                 canvas.move(idt, 10, 0)
                 x, y = canvas.coords(idt)
@@ -187,8 +201,10 @@ class Application(tk.Frame):
 
     def updategif(self, idimg, canvas, img, img_offset=-1, time=-1, looptime=200, noloop=False):
         if pause:
-            canvas.after(75, lambda: self.updategif(idimg, canvas, img,img_offset=img_offset, time=time, looptime=looptime, noloop=noloop))
-        else :
+            canvas.after(75,
+                         lambda: self.updategif(idimg, canvas, img, img_offset=img_offset, time=time, looptime=looptime,
+                                                noloop=noloop))
+        else:
             if "dead" in canvas.gettags(idimg):
                 if time == 10:
                     canvas.after(looptime, lambda: self.updategif(idimg, canvas, dead, time + 1))
@@ -206,10 +222,12 @@ class Application(tk.Frame):
                 canvas.itemconfig(idimg, image=img[img_offset])
 
                 if not noloop:
-                    canvas.after(looptime, lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime))
+                    canvas.after(looptime,
+                                 lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime))
                 else:
                     canvas.after(looptime,
-                                 lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime, noloop=True))
+                                 lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime,
+                                                        noloop=True))
 
     def drawEnnemies(self):
         self.tags = list()
@@ -225,13 +243,14 @@ class Application(tk.Frame):
                 self.updategif(idlic, self.canvas[row], unicorn, looptime=50)
 
     def moveEnnemy(self, idlic, canvas, ent, img_offset=-1):
-        #print(pause)
         if pause:
             canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, ent, img_offset))
-        else :
+        else:
             if len(canvas.find_withtag(idlic)) == 1:
-                if self.pv <= 0:
+                if self.pv == 0:
+
                     canvas.delete(idlic)
+
                 else:
                     canvas.move(idlic, -30, 0)
 
@@ -246,11 +265,21 @@ class Application(tk.Frame):
                         canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, ent, img_offset + 1))
 
     def updatePV(self, pvDIFF):
-        if self.pv + pvDIFF < 100:
+        if self.pv + pvDIFF <= 100:
             self.pv = self.pv + pvDIFF
             pv = self.pv / 100 * 1920
             self.hp_canvas.delete("all")
             self.hp_canvas.create_rectangle(0, 0, pv, 50, fill="green")
+        if self.pv <= 0:
+            answer = askquestion("PERDU !", "Voulez-vosu réessayer?")
+            if answer == "yes":
+                self.init_game()
+            else:
+                self.end()
+
+    def resetPV(self):
+        self.hp_canvas.delete("all")
+        self.hp_canvas.create_rectangle(0, 0, self.hp_canvas.winfo_width(), 50, fill="green")
 
     def tagged(self, tag, tp, canvas):
         listTAGS = list()
@@ -267,7 +296,7 @@ class Application(tk.Frame):
     def update_background(self, canvas):
         if pause:
             canvas.after(50, lambda: self.update_background(canvas))
-        else :
+        else:
 
             canvas.move('bg_star', -20, 0)
             canvas.move('bg_planet', -2, 0)
@@ -317,24 +346,42 @@ class Application(tk.Frame):
             if tag in canvas.gettags(tags):
                 return tags
 
-    def toggle_fullscreen(self, event=None):
-        self.master.attributes("-fullscreen", True)
+    def end(self, event=None):
+        self.master.destroy()
 
-    def end_fullscreen(self, event=None):
-        self.master.attributes("-fullscreen", False)
-
-    def pause(self,event=None):
+    def pause(self, event=None):
         global pause
         if pause:
-
+            self.mouvements(True)
+            self.eventTir(True)
             pause = False
         else:
-
+            self.mouvements(False)
+            self.eventTir(False)
             pause = True
 
-pause = True
+    def displayCommands(self):
+        font = tkFont.Font(family='Helvetica', size=36, weight='bold')
+
+        texts = ["Press Enter to Start/Pause/UnPause","Press ↑ or ↓ to Move","Press Space to Attack","Press Escape to Stop","Press H to display this"]
+        for i in range(5):
+            self.canvas[i].create_text(self.canvas[0].winfo_width() / 2, self.canvas[0].winfo_height() / 2,
+                                       text=texts[i], fill="Yellow", font=font, tag="help")
+
+
+    def removeCommands(self):
+        for canvas in self.canvas:
+            canvas.delete(canvas.find_withtag("help")[0])
+
+    def help(self, event=None):
+        if (len(self.canvas[0].find_withtag("help")) == 1):
+            self.removeCommands()
+        else:
+            self.displayCommands()
+
+
 root = tk.Tk()
-root.geometry("1920x1080")
+# root.geometry("1920x1080")
 root.attributes("-fullscreen", True)
 root.config(cursor="none")
 unicorn = [tk.PhotoImage(file='gif/unireact.gif', format='gif -index %i' % i) for i in range(9)]
