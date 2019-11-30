@@ -6,7 +6,7 @@ from Alien import *
 from Joueur import *
 
 vague = 5
-
+pause = False
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -27,6 +27,9 @@ class Application(tk.Frame):
         self.initEnnemies()
         self.drawEnnemies()
         self.drawJoueur()
+        self.master.bind("<F11>", self.toggle_fullscreen)
+        self.master.bind("<Escape>", self.end_fullscreen)
+        self.master.bind("<Return>", self.pause)
 
     def init_ennemyList(self):
         self.rows = list()
@@ -83,27 +86,35 @@ class Application(tk.Frame):
 
     def create_background(self, canvas):
         canvas.update()
-        for i in range(randint(10, 50)):
+        for i in range(randint(50, 50)):
             x = randint(0, canvas.winfo_width() * 5)
-            y = randint(0, canvas.winfo_height())
+            y = randint(0, canvas.winfo_height() - 60 * 2)
             w = randint(1, 5)
 
             canvas.create_oval(x, y, x + w, y + w, width=w, outline='white', tag="bg_star")
 
-        colors = ["yellow", "blue2", "red", "cyan"]
-
-        for i in range(randint(0, 3)):
+        colors = ["DodgerBlue4", "MediumOrchid4", "firebrick4", "goldenrod"]
+        for i in range(randint(0, 2)):
+            # color = colors[randint(0, len(colors) - 1)]
+            # x = 0
+            # y = 0
+            # w = 0
+            # s = 0
+            # canvas.create_oval(x, y, x + w, y + w, tag="bg_planet")
+            # canvas.create_oval(x-w/2, y+w/2-s, x+w*1.50 , y+w/2 +s, tag="bg_planet")
             color = colors[randint(0, len(colors) - 1)]
-            x = randint(0, canvas.winfo_width() * 5)
-            y = randint(30, canvas.winfo_height() - 30)
-            w = randint(10, 30)
-
-            canvas.create_oval(x, y, x + w, y + w, width=1, fill=color, outline="white", tag="bg_planet")
+            x = randint(0, canvas.winfo_width() * 3)
+            y = 0
+            w = randint(30, 50)
+            s = w / 5
+            canvas.create_oval(x, y, x + w, y + w, width=1, fill=color, tag="bg_planet")
+            canvas.create_oval(x - w / 2, y + w / 2 - s, x + w * 1.50, y + w / 2 + s, width=2, outline=color,
+                               tag="bg_planet_circle")
 
         self.update_background(canvas)
 
     def moveDown(self, event):
-        x = self.hero.getPosX() + self.main_frame.winfo_height() / 5
+        x = self.hero.getPosX() + self.frameHeros.winfo_height() / 5
         if x < self.main_frame.winfo_height():
             self.hero.setPosX(x)
             self.frameHeros.delete("all")
@@ -111,7 +122,7 @@ class Application(tk.Frame):
             self.updategif(hero, self.frameHeros, ship)
 
     def moveUp(self, event):
-        x = self.hero.getPosX() - self.main_frame.winfo_height() / 5
+        x = self.hero.getPosX() - self.frameHeros.winfo_height() / 5
         if x > 0:
             self.hero.setPosX(x)
             self.frameHeros.delete("all")
@@ -130,9 +141,9 @@ class Application(tk.Frame):
             row = 3
         else:
             row = 4
-        idballe = self.canvas[row].create_image(bullet[0].width() / 2, self.canvas[row].winfo_height() / 2,
+        idballe = self.canvas[row].create_image(0, self.canvas[row].winfo_height() / 2,
                                                 tag="bullet")
-        self.updategif(idballe, self.canvas[row], bullet,img_offset=0)
+        self.updategif(idballe, self.canvas[row], bullet, img_offset=0, noloop=True)
         self.moveTir(idballe, self.canvas[row])
 
     def mouvements(self):
@@ -148,21 +159,24 @@ class Application(tk.Frame):
             self.rows[i].append(ennemy)
 
     def moveTir(self, idt, canvas):
-        if len(canvas.find_withtag(idt)) == 1:
-            canvas.move(idt, 10, 0)
-            x, y = canvas.coords(idt)
-            if x > canvas.winfo_width() - 250:
-                canvas.delete(idt)
-            tpl = canvas.find_overlapping(x, y, x, y + 130)
+        if pause:
+            canvas.after(10, lambda: self.moveTir(idt, canvas))
+        else :
+            if len(canvas.find_withtag(idt)) == 1:
+                canvas.move(idt, 10, 0)
+                x, y = canvas.coords(idt)
+                if x > canvas.winfo_width() - 250:
+                    canvas.delete(idt)
+                tpl = canvas.find_overlapping(x, y, x, y + 130)
 
-            if self.tagged("bullet", tpl, canvas) and self.tagged("uni", tpl, canvas):
+                if self.tagged("bullet", tpl, canvas) and self.tagged("uni", tpl, canvas):
 
-                canvas.itemconfig(self.getIDfromTag("uni", tpl, canvas), image=dead, tags="dead")
-                canvas.delete(self.getIDfromTag("bullet", tpl, canvas))
-                self.updatePV(1)
+                    canvas.itemconfig(self.getIDfromTag("uni", tpl, canvas), image=dead, tags="dead")
+                    canvas.delete(self.getIDfromTag("bullet", tpl, canvas))
+                    self.updatePV(1)
 
-            else:
-                canvas.after(10, lambda: self.moveTir(idt, canvas))
+                else:
+                    canvas.after(10, lambda: self.moveTir(idt, canvas))
 
     def drawJoueur(self):
         hero = self.frameHeros.create_image(95, 100, image=ship[0])
@@ -171,19 +185,31 @@ class Application(tk.Frame):
         self.updategif(hero, self.frameHeros, ship)
         return x, y
 
-    def updategif(self, idimg, canvas, img, img_offset=-1, time=-1, looptime=200):
-        if "dead" in canvas.gettags(idimg):
-            if time == 10:
-                canvas.after(looptime, lambda: self.updategif(idimg, canvas, dead, time + 1))
-            else:
-                canvas.delete(idimg)
-        elif len(canvas.find_withtag(idimg)) != 0:
-            if img_offset == -1:
-                img_offset = randint(0, len(img) - 1)
-            elif img_offset >= len(img):
-                img_offset = 0
-            canvas.itemconfig(idimg, image=img[img_offset])
-            canvas.after(looptime, lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime))
+    def updategif(self, idimg, canvas, img, img_offset=-1, time=-1, looptime=200, noloop=False):
+        if pause:
+            canvas.after(75, lambda: self.updategif(idimg, canvas, img,img_offset=img_offset, time=time, looptime=looptime, noloop=noloop))
+        else :
+            if "dead" in canvas.gettags(idimg):
+                if time == 10:
+                    canvas.after(looptime, lambda: self.updategif(idimg, canvas, dead, time + 1))
+                else:
+                    canvas.delete(idimg)
+            elif len(canvas.find_withtag(idimg)) != 0:
+                if img_offset == -1:
+                    img_offset = randint(0, len(img) - 1)
+
+                elif img_offset >= len(img) and noloop:
+                    img_offset = img_offset - 1
+
+                elif img_offset >= len(img):
+                    img_offset = 0
+                canvas.itemconfig(idimg, image=img[img_offset])
+
+                if not noloop:
+                    canvas.after(looptime, lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime))
+                else:
+                    canvas.after(looptime,
+                                 lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime, noloop=True))
 
     def drawEnnemies(self):
         self.tags = list()
@@ -199,21 +225,25 @@ class Application(tk.Frame):
                 self.updategif(idlic, self.canvas[row], unicorn, looptime=50)
 
     def moveEnnemy(self, idlic, canvas, ent, img_offset=-1):
-        if len(canvas.find_withtag(idlic)) == 1:
-            if self.pv <= 0:
-                canvas.delete(idlic)
-            else:
-                canvas.move(idlic, -30, 0)
-
-                # get current position
-                x1, y1 = canvas.coords(idlic)
-                ent.setPos(x1, y1)
-                if x1 <= unicorn[0].width() / 2 + 20:
+        #print(pause)
+        if pause:
+            canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, ent, img_offset))
+        else :
+            if len(canvas.find_withtag(idlic)) == 1:
+                if self.pv <= 0:
                     canvas.delete(idlic)
-                    self.updatePV(-10)
-
                 else:
-                    canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, ent, img_offset + 1))
+                    canvas.move(idlic, -30, 0)
+
+                    # get current position
+                    x1, y1 = canvas.coords(idlic)
+                    ent.setPos(x1, y1)
+                    if x1 <= unicorn[0].width() / 2 + 20:
+                        canvas.delete(idlic)
+                        self.updatePV(-10)
+
+                    else:
+                        canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, ent, img_offset + 1))
 
     def updatePV(self, pvDIFF):
         if self.pv + pvDIFF < 100:
@@ -235,42 +265,77 @@ class Application(tk.Frame):
         return False
 
     def update_background(self, canvas):
-        canvas.move('bg_star', -30, 0)
-        canvas.move('bg_planet', -2, 0)
-        for star in canvas.find_withtag('bg_star'):
-            x = canvas.coords(star)
-            if x[0] < 0:
-                canvas.delete(star)
-                x = canvas.winfo_width()
-                y = randint(0, canvas.winfo_height())
-                w = randint(1, 5)
+        if pause:
+            canvas.after(50, lambda: self.update_background(canvas))
+        else :
 
-                canvas.create_oval(x, y, x + w, y + w, width=w, outline='white', tag="bg_star")
-        canvas.tag_lower("bg_star")
+            canvas.move('bg_star', -20, 0)
+            canvas.move('bg_planet', -2, 0)
+            canvas.move('bg_planet_circle', -2, 0)
+            for star in canvas.find_withtag('bg_star'):
+                x = canvas.coords(star)
+                if x[0] < 0:
+                    canvas.delete(star)
+                    x = canvas.winfo_width()
+                    y = randint(0, canvas.winfo_height())
+                    w = randint(1, 5)
 
-        colors = ["yellow", "blue2", "red", "cyan"]
-        for planet in canvas.find_withtag('bg_planet'):
-            x = canvas.coords(planet)
-            if x[0] < 0:
-                canvas.delete(planet)
-                color = colors[randint(0, len(colors) - 1)]
-                x = canvas.winfo_width()
-                y = randint(30, canvas.winfo_height() - 30)
-                w = randint(10, 50)
+                    canvas.create_oval(x, y, x + w, y + w, width=w, outline='white', tag="bg_star")
+            canvas.tag_lower("bg_star")
 
-                canvas.create_oval(x, y, x + w, y + w, width=1, fill=color, outline="white", tag="bg_planet")
-        canvas.tag_lower("bg_planet")
+            for circle in canvas.find_withtag('bg_planet_circle'):
+                x = canvas.coords(circle)
+                if x[0] < 0:
+                    canvas.delete(circle)
+            canvas.tag_lower("bg_planet_circle")
 
-        canvas.after(50, lambda: self.update_background(canvas))
+            colors = ["DodgerBlue4", "MediumOrchid4", "firebrick4", "goldenrod"]
+            for planet in canvas.find_withtag('bg_planet'):
+                i = 0
+                if i % 2 == 0:
+                    x = canvas.coords(planet)
+                    if x[0] < 0:
+                        canvas.delete(planet)
+                        rand = randint(0, 1)
+                        color = colors[randint(0, len(colors) - 1)]
+                        x = canvas.winfo_width()
+                        y = randint(60, canvas.winfo_height() - 60)
+                        w = randint(10, 50)
+                        s = w / 5
+                        canvas.create_oval(x, y, x + w, y + w, width=1, fill=color, tag="bg_planet")
+                        if rand % 2 == 0:
+                            canvas.create_oval(x - w / 2, y + w / 2 - s, x + w * 1.50, y + w / 2 + s, width=2,
+                                               outline=color,
+                                               tag="bg_planet_circle")
+                    i += 1
+            canvas.tag_lower("bg_planet")
+
+            canvas.after(50, lambda: self.update_background(canvas))
 
     def getIDfromTag(self, tag, ids, canvas):
         for tags in ids:
             if tag in canvas.gettags(tags):
                 return tags
 
+    def toggle_fullscreen(self, event=None):
+        self.master.attributes("-fullscreen", True)
 
+    def end_fullscreen(self, event=None):
+        self.master.attributes("-fullscreen", False)
+
+    def pause(self,event=None):
+        global pause
+        if pause:
+
+            pause = False
+        else:
+
+            pause = True
+
+pause = True
 root = tk.Tk()
 root.geometry("1920x1080")
+root.attributes("-fullscreen", True)
 root.config(cursor="none")
 unicorn = [tk.PhotoImage(file='gif/unireact.gif', format='gif -index %i' % i) for i in range(9)]
 ship = [tk.PhotoImage(file='gif/vaisseau.gif', format='gif -index %i' % i) for i in range(4)]
