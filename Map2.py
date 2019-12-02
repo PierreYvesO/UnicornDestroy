@@ -1,8 +1,10 @@
 import sys
 import tkinter as tk
-from random import randint
-from tkinter.messagebox import askretrycancel, askquestion
 import tkinter.font as tkFont
+from random import randint
+from tkinter.messagebox import askquestion
+from playsound import playsound
+
 from Alien import *
 from Joueur import *
 
@@ -21,27 +23,29 @@ class Application(tk.Frame):
         self.create_HPBAR()
         self.create_MAIN()
         self.init_game(fullreset=True)
-
+        self.drawJoueur()
+        self.init_sound()
         self.master.bind("<h>", self.help)
         self.master.bind("<Escape>", self.end)
         self.master.bind("<Return>", self.pause)
 
-    def init_game(self,fullreset=False):
+    def init_game(self, fullreset=False):
         global vague
         if fullreset:
+            vague = 1
             self.pv = 100
             self.resetPV()
             self.pause()
-            self.drawJoueur()
-            self.hero = Joueur(95, 100)
-        
-        self.init_ennemyList()
 
+            self.hero = Joueur(95, 100)
+
+        self.init_ennemyList()
         self.vague(vague)
         self.initEnnemies()
         self.drawEnnemies()
-        
-        self.displayCommands()
+        if fullreset:
+            self.displayCommands()
+
         self.printWave()
 
     def init_ennemyList(self):
@@ -53,15 +57,17 @@ class Application(tk.Frame):
         self.rows.append(list())
 
     def vague(self, vague=1):
- 
-            for i in range(vague*5):
-                self.ennemies.append(Alien(100, 100, 1))
 
+        for i in range(vague * 5):
+            self.ennemies.append(Alien(100, 100, 1))
 
+    def init_sound(self):
+        playsound('testjeu.mp3',False)
+        self.master.after(3250,self.init_sound)
 
     def create_HPBAR(self):
         hp_frame = tk.Frame(self, bg="black", height=50)
-        self.hp_canvas = tk.Canvas(hp_frame, width=1920, height=50)
+        self.hp_canvas = tk.Canvas(hp_frame, width=1920, height=50,bg="black")
         self.hp_canvas.create_rectangle(0, 0, 1920, 50, fill="green")
         self.hp_canvas.pack()
 
@@ -112,15 +118,16 @@ class Application(tk.Frame):
                                tag="bg_planet_circle")
 
         self.update_background(canvas)
+
     def printWave(self):
         font = tkFont.Font(family='Helvetica', size=36, weight='bold')
 
         text = "Wave {}".format(vague)
-        if len(self.canvas[0].find_withtag("wave"))==0:
+        if len(self.canvas[0].find_withtag("wave")) == 0:
             self.canvas[0].create_text(self.canvas[0].winfo_width() / 2, 36,
                                        text=text, fill="RED", font=font, tag="wave")
         else:
-            self.canvas[0].itemconfigure(self.canvas[0].find_withtag("wave"),text = text)
+            self.canvas[0].itemconfigure(self.canvas[0].find_withtag("wave"), text=text)
 
     def moveDown(self, event):
         x = self.hero.getPosX() + self.frameHeros.winfo_height() / 5
@@ -165,9 +172,9 @@ class Application(tk.Frame):
 
     def eventTir(self, activate):
         if activate:
-            self.master.bind("<space>", self.tir)
+            self.master.bind("<KeyRelease-space>", self.tir)
         else:
-            self.master.unbind("<space>")
+            self.master.unbind("<KeyRelease-space>")
 
     def initEnnemies(self):
         for ennemy in self.ennemies:
@@ -186,15 +193,14 @@ class Application(tk.Frame):
                 tpl = canvas.find_overlapping(x, y, x, y + 130)
 
                 if self.tagged("bullet", tpl, canvas) and self.tagged("uni", tpl, canvas):
-
+                    playsound("deaduni2.mp3",False)
                     canvas.itemconfig(self.getIDfromTag("uni", tpl, canvas), image=dead, tags="dead")
                     canvas.delete(self.getIDfromTag("bullet", tpl, canvas))
                     self.updatePV(1)
                     self.ennemies.pop()
-                    if len(self.ennemies)==0:
+                    if len(self.ennemies) == 0:
                         global vague
-                        print (vague)
-                        vague+=1
+                        vague += 1
                         self.init_game()
 
                 else:
@@ -233,6 +239,7 @@ class Application(tk.Frame):
                     canvas.after(looptime,
                                  lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime))
                 else:
+                    playsound("bulletsound.mp3", False)
                     canvas.after(looptime,
                                  lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime,
                                                         noloop=True))
@@ -240,6 +247,7 @@ class Application(tk.Frame):
     def drawEnnemies(self):
         self.tags = list()
         for row in range(0, 5):
+            self.canvas[row].delete("uni")
             offset = 20 + randint(0, 1000)
             x = 0
             self.master.update()
@@ -268,11 +276,12 @@ class Application(tk.Frame):
                     if x1 <= unicorn[0].width() / 2 + 20:
                         canvas.delete(idlic)
                         self.updatePV(-10)
+                        playsound("deaduni.mp3", False)
                         self.ennemies.pop()
-                        if len(self.ennemies)==0:
+                        if len(self.ennemies) == 0:
                             global vague
-                            print (vague)
-                            vague+=1
+                            print(vague)
+                            vague += 1
                             self.init_game()
 
                     else:
@@ -285,9 +294,10 @@ class Application(tk.Frame):
             self.hp_canvas.delete("all")
             self.hp_canvas.create_rectangle(0, 0, pv, 50, fill="green")
         if self.pv <= 0:
+            self.pause()
             answer = askquestion("LOOSER !", "TRY AGAIN?")
             if answer == "yes":
-                self.init_game()
+                self.init_game(fullreset=True)
             else:
                 self.end()
 
@@ -377,11 +387,11 @@ class Application(tk.Frame):
     def displayCommands(self):
         font = tkFont.Font(family='Helvetica', size=36, weight='bold')
 
-        texts = ["Press Enter to Start/Pause/UnPause","Press ↑ or ↓ to Move","Press Space to Attack","Press Escape to Stop","Press H to display this"]
+        texts = ["Press Enter to Start/Pause/UnPause", "Press ↑ or ↓ to Move", "Press Space to Attack",
+                 "Press Escape to Stop", "Press H to display this"]
         for i in range(5):
             self.canvas[i].create_text(self.canvas[0].winfo_width() / 2, self.canvas[0].winfo_height() / 2,
                                        text=texts[i], fill="Yellow", font=font, tag="help")
-
 
     def removeCommands(self):
         for canvas in self.canvas:
@@ -405,3 +415,4 @@ dead = tk.PhotoImage(file='gif/dead.gif')
 
 app = Application(master=root)
 app.mainloop()
+
