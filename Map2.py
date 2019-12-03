@@ -3,71 +3,37 @@ import tkinter as tk
 import tkinter.font as tkFont
 from random import randint
 from tkinter.messagebox import askquestion
+
 from playsound import playsound
 
-from Alien import *
 from Joueur import *
 
 vague = 1
 pause = False
 
-
 class Application(tk.Frame):
     def __init__(self, master=None):
 
         sys.setrecursionlimit(10000)
-        self.ennemies = list()
+
         super().__init__(master)
         self.master = master
         self.pack(fill="both")
+
         self.create_HPBAR()
         self.create_MAIN()
+
+        self.hero = Joueur()
         self.init_game(fullreset=True)
+        self.pause()
         self.drawJoueur()
+
         self.init_sound()
-        self.master.bind("<h>", self.help)
-        self.master.bind("<Escape>", self.end)
-        self.master.bind("<Return>", self.pause)
-
-    def init_game(self, fullreset=False):
-        global vague
-        if fullreset:
-            vague = 1
-            self.pv = 100
-            self.resetPV()
-            self.pause()
-
-            self.hero = Joueur(95, 100)
-
-        self.init_ennemyList()
-        self.vague(vague)
-        self.initEnnemies()
-        self.drawEnnemies()
-        if fullreset:
-            self.displayCommands()
-
-        self.printWave()
-
-    def init_ennemyList(self):
-        self.rows = list()
-        self.rows.append(list())
-        self.rows.append(list())
-        self.rows.append(list())
-        self.rows.append(list())
-        self.rows.append(list())
-
-    def vague(self, vague=1):
-
-        for i in range(vague * 5):
-            self.ennemies.append(Alien(100, 100, 1))
-
-    def init_sound(self):
-        playsound('testjeu.mp3',False)
-        self.master.after(3250,self.init_sound)
+        self.init_touch_binding()
 
     def create_HPBAR(self):
         hp_frame = tk.Frame(self, bg="black", height=50)
-        self.hp_canvas = tk.Canvas(hp_frame, width=1920, height=50,bg="black")
+        self.hp_canvas = tk.Canvas(hp_frame, width=1920, height=50, bg="black")
         self.hp_canvas.create_rectangle(0, 0, 1920, 50, fill="green")
         self.hp_canvas.pack()
 
@@ -90,6 +56,40 @@ class Application(tk.Frame):
 
         self.main_frame.pack(side="bottom", fill="both", expand=True)
 
+    def init_game(self, fullreset=False):
+        global vague
+        if fullreset:
+            vague = 1
+            self.hero.setPV()
+            self.resetPV()
+
+        self.init_ennemyList()
+        self.vague()
+        self.initEnnemies()
+        self.drawEnnemies()
+        if fullreset:
+            self.displayCommands()
+
+        self.printWave()
+
+    def drawJoueur(self):
+
+        hero = self.frameHeros.create_image(ship[0].width() / 2, ship[0].height() / 2, image=ship[0])
+        x, y = self.frameHeros.coords(hero)
+        self.hero.setPosX(x)
+        self.hero.setPosY(y)
+        self.updategif(hero, self.frameHeros, ship)
+
+    def init_ennemyList(self):
+        self.rows = [0, 0, 0, 0, 0]
+
+    def vague(self):
+        self.ennemies = vague * 5
+
+    def init_sound(self):
+        playsound('testjeu.mp3', False)
+        self.master.after(3250, self.init_sound)
+
     def create_background(self, canvas):
         canvas.update()
         for i in range(randint(50, 50)):
@@ -101,13 +101,6 @@ class Application(tk.Frame):
 
         colors = ["DodgerBlue4", "MediumOrchid4", "firebrick4", "goldenrod"]
         for i in range(randint(0, 2)):
-            # color = colors[randint(0, len(colors) - 1)]
-            # x = 0
-            # y = 0
-            # w = 0
-            # s = 0
-            # canvas.create_oval(x, y, x + w, y + w, tag="bg_planet")
-            # canvas.create_oval(x-w/2, y+w/2-s, x+w*1.50 , y+w/2 +s, tag="bg_planet")
             color = colors[randint(0, len(colors) - 1)]
             x = randint(0, canvas.winfo_width() * 3)
             y = 0
@@ -129,7 +122,7 @@ class Application(tk.Frame):
         else:
             self.canvas[0].itemconfigure(self.canvas[0].find_withtag("wave"), text=text)
 
-    def moveDown(self, event):
+    def moveDown(self, event=None):
         x = self.hero.getPosX() + self.frameHeros.winfo_height() / 5
         if x < self.main_frame.winfo_height():
             self.hero.setPosX(x)
@@ -137,7 +130,7 @@ class Application(tk.Frame):
             hero = self.frameHeros.create_image(90, x)
             self.updategif(hero, self.frameHeros, ship)
 
-    def moveUp(self, event):
+    def moveUp(self, event=None):
         x = self.hero.getPosX() - self.frameHeros.winfo_height() / 5
         if x > 0:
             self.hero.setPosX(x)
@@ -170,6 +163,11 @@ class Application(tk.Frame):
             self.master.unbind("<Down>")
             self.master.unbind("<Up>")
 
+    def init_touch_binding(self):
+        self.master.bind("<h>", self.help)
+        self.master.bind("<Escape>", self.end)
+        self.master.bind("<Return>", self.pause)
+
     def eventTir(self, activate):
         if activate:
             self.master.bind("<KeyRelease-space>", self.tir)
@@ -177,9 +175,9 @@ class Application(tk.Frame):
             self.master.unbind("<KeyRelease-space>")
 
     def initEnnemies(self):
-        for ennemy in self.ennemies:
+        for ennemy in range(self.ennemies):
             i = randint(0, 4)
-            self.rows[i].append(ennemy)
+            self.rows[i] += 1
 
     def moveTir(self, idt, canvas):
         if pause:
@@ -193,25 +191,18 @@ class Application(tk.Frame):
                 tpl = canvas.find_overlapping(x, y, x, y + 130)
 
                 if self.tagged("bullet", tpl, canvas) and self.tagged("uni", tpl, canvas):
-                    playsound("deaduni2.mp3",False)
+                    playsound("deaduni2.mp3", False)
                     canvas.itemconfig(self.getIDfromTag("uni", tpl, canvas), image=dead, tags="dead")
                     canvas.delete(self.getIDfromTag("bullet", tpl, canvas))
                     self.updatePV(1)
-                    self.ennemies.pop()
-                    if len(self.ennemies) == 0:
+                    self.ennemies -= 1
+                    if self.ennemies <= 0:
                         global vague
                         vague += 1
                         self.init_game()
 
                 else:
                     canvas.after(10, lambda: self.moveTir(idt, canvas))
-
-    def drawJoueur(self):
-        hero = self.frameHeros.create_image(95, 100, image=ship[0])
-
-        x, y = self.frameHeros.coords(hero)
-        self.updategif(hero, self.frameHeros, ship)
-        return x, y
 
     def updategif(self, idimg, canvas, img, img_offset=-1, time=-1, looptime=200, noloop=False):
         if pause:
@@ -245,25 +236,24 @@ class Application(tk.Frame):
                                                         noloop=True))
 
     def drawEnnemies(self):
-        self.tags = list()
         for row in range(0, 5):
             self.canvas[row].delete("uni")
             offset = 20 + randint(0, 1000)
             x = 0
             self.master.update()
-            for ent in self.rows[row]:
+            for ent in range(self.rows[row]):
                 idlic = self.canvas[row].create_image(1920 + offset, self.canvas[row].winfo_height() / 2, tag="uni")
                 offset += 500 + randint(0, 2000)
                 x += 25
-                self.moveEnnemy(idlic, self.canvas[row], ent)
+                self.moveEnnemy(idlic, self.canvas[row])
                 self.updategif(idlic, self.canvas[row], unicorn, looptime=50)
 
-    def moveEnnemy(self, idlic, canvas, ent, img_offset=-1):
+    def moveEnnemy(self, idlic, canvas, img_offset=-1):
         if pause:
-            canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, ent, img_offset))
+            canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, img_offset))
         else:
             if len(canvas.find_withtag(idlic)) == 1:
-                if self.pv == 0:
+                if self.hero.getPV() == 0:
 
                     canvas.delete(idlic)
 
@@ -271,29 +261,29 @@ class Application(tk.Frame):
                     canvas.move(idlic, -30, 0)
 
                     # get current position
-                    x1, y1 = canvas.coords(idlic)
-                    ent.setPos(x1, y1)
+                    x1, y = canvas.coords(idlic)
                     if x1 <= unicorn[0].width() / 2 + 20:
                         canvas.delete(idlic)
                         self.updatePV(-10)
                         playsound("deaduni.mp3", False)
-                        self.ennemies.pop()
-                        if len(self.ennemies) == 0:
+                        self.ennemies -= 1
+                        if self.ennemies == 0:
                             global vague
                             print(vague)
                             vague += 1
                             self.init_game()
 
                     else:
-                        canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, ent, img_offset + 1))
+                        canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, img_offset + 1))
 
     def updatePV(self, pvDIFF):
-        if self.pv + pvDIFF <= 100:
-            self.pv = self.pv + pvDIFF
-            pv = self.pv / 100 * 1920
+        self.hero.setPV(self.hero.getPV() + pvDIFF)
+        pv = self.hero.getPV()
+        if pv + pvDIFF <= 100:
+            pvscale = pv / 100 * 1920
             self.hp_canvas.delete("all")
-            self.hp_canvas.create_rectangle(0, 0, pv, 50, fill="green")
-        if self.pv <= 0:
+            self.hp_canvas.create_rectangle(0, 0, pvscale, 50, fill="green")
+        if pv <= 0:
             self.pause()
             answer = askquestion("LOOSER !", "TRY AGAIN?")
             if answer == "yes":
@@ -384,6 +374,12 @@ class Application(tk.Frame):
             self.eventTir(False)
             pause = True
 
+    def help(self, event=None):
+        if len(self.canvas[0].find_withtag("help")) == 1:
+            self.removeCommands()
+        else:
+            self.displayCommands()
+
     def displayCommands(self):
         font = tkFont.Font(family='Helvetica', size=36, weight='bold')
 
@@ -397,22 +393,15 @@ class Application(tk.Frame):
         for canvas in self.canvas:
             canvas.delete(canvas.find_withtag("help")[0])
 
-    def help(self, event=None):
-        if (len(self.canvas[0].find_withtag("help")) == 1):
-            self.removeCommands()
-        else:
-            self.displayCommands()
-
 
 root = tk.Tk()
-# root.geometry("1920x1080")
-root.attributes("-fullscreen", True)
-root.config(cursor="none")
+
 unicorn = [tk.PhotoImage(file='gif/unireact.gif', format='gif -index %i' % i) for i in range(9)]
 ship = [tk.PhotoImage(file='gif/vaisseau.gif', format='gif -index %i' % i) for i in range(4)]
 bullet = [tk.PhotoImage(file='gif/bullet.gif', format='gif -index %i' % i) for i in range(12)]
 dead = tk.PhotoImage(file='gif/dead.gif')
 
+root.attributes("-fullscreen", True)
+root.config(cursor="none")
 app = Application(master=root)
 app.mainloop()
-
