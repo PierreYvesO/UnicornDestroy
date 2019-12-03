@@ -11,6 +11,7 @@ from Joueur import *
 vague = 1
 pause = False
 
+
 class Application(tk.Frame):
     def __init__(self, master=None):
 
@@ -69,8 +70,6 @@ class Application(tk.Frame):
         self.drawEnnemies()
         if fullreset:
             self.displayCommands()
-
-        self.printWave()
 
     def drawJoueur(self):
 
@@ -269,7 +268,6 @@ class Application(tk.Frame):
                         self.ennemies -= 1
                         if self.ennemies == 0:
                             global vague
-                            print(vague)
                             vague += 1
                             self.init_game()
 
@@ -362,6 +360,7 @@ class Application(tk.Frame):
 
     def end(self, event=None):
         self.master.destroy()
+        exit(0)
 
     def pause(self, event=None):
         global pause
