@@ -3,8 +3,8 @@ import tkinter as tk
 import tkinter.font as tkFont
 from random import randint
 from tkinter.messagebox import askquestion
+from Sound import *
 
-from playsound import playsound
 
 from Joueur import *
 
@@ -63,11 +63,12 @@ class Application(tk.Frame):
             vague = 1
             self.hero.setPV()
             self.resetPV()
-
+        
         self.init_ennemyList()
         self.vague()
         self.initEnnemies()
         self.drawEnnemies()
+        self.printWave()
         if fullreset:
             self.displayCommands()
 
@@ -86,9 +87,9 @@ class Application(tk.Frame):
         self.ennemies = vague * 5
 
     def init_sound(self):
-        playsound('testjeu.mp3', False)
-        self.master.after(3250, self.init_sound)
-
+        self.music = Sound("testjeu.mp3")
+        self.music.start()
+        
     def create_background(self, canvas):
         canvas.update()
         for i in range(randint(50, 50)):
@@ -190,7 +191,7 @@ class Application(tk.Frame):
                 tpl = canvas.find_overlapping(x, y, x, y + 130)
 
                 if self.tagged("bullet", tpl, canvas) and self.tagged("uni", tpl, canvas):
-                    playsound("deaduni2.mp3", False)
+                    dead = Sound("deaduni2.mp3",stop=True).start()
                     canvas.itemconfig(self.getIDfromTag("uni", tpl, canvas), image=dead, tags="dead")
                     canvas.delete(self.getIDfromTag("bullet", tpl, canvas))
                     self.updatePV(1)
@@ -229,7 +230,7 @@ class Application(tk.Frame):
                     canvas.after(looptime,
                                  lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime))
                 else:
-                    playsound("bulletsound.mp3", False)
+                    bulletsound = Sound("bulletsound.mp3",stop=True).start()
                     canvas.after(looptime,
                                  lambda: self.updategif(idimg, canvas, img, img_offset + 1, looptime=looptime,
                                                         noloop=True))
@@ -264,7 +265,7 @@ class Application(tk.Frame):
                     if x1 <= unicorn[0].width() / 2 + 20:
                         canvas.delete(idlic)
                         self.updatePV(-10)
-                        playsound("deaduni.mp3", False)
+                        dead = Sound("deaduni.mp3",stop=True).start()
                         self.ennemies -= 1
                         if self.ennemies == 0:
                             global vague
@@ -278,13 +279,15 @@ class Application(tk.Frame):
         self.hero.setPV(self.hero.getPV() + pvDIFF)
         pv = self.hero.getPV()
         if pv + pvDIFF <= 100:
-            pvscale = pv / 100 * 1920
+            pvscale = pv / 100 * self.hp_canvas.winfo_width()
             self.hp_canvas.delete("all")
             self.hp_canvas.create_rectangle(0, 0, pvscale, 50, fill="green")
         if pv <= 0:
             self.pause()
+            root.config(cursor="heart")
             answer = askquestion("LOOSER !", "TRY AGAIN?")
             if answer == "yes":
+                root.config(cursor="none")
                 self.init_game(fullreset=True)
             else:
                 self.end()
@@ -359,7 +362,10 @@ class Application(tk.Frame):
                 return tags
 
     def end(self, event=None):
+        self.music.stop()
+        self.music.join()
         self.master.destroy()
+
         exit(0)
 
     def pause(self, event=None):
@@ -391,6 +397,7 @@ class Application(tk.Frame):
     def removeCommands(self):
         for canvas in self.canvas:
             canvas.delete(canvas.find_withtag("help")[0])
+
 
 
 root = tk.Tk()
