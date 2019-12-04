@@ -4,8 +4,7 @@ import tkinter.font as tkFont
 from random import randint
 from tkinter.messagebox import askquestion
 from Sound import *
-
-
+from Score import *
 from Joueur import *
 
 vague = 1
@@ -20,7 +19,7 @@ class Application(tk.Frame):
         super().__init__(master)
         self.master = master
         self.pack(fill="both")
-
+        self.score = Score()
         self.create_HPBAR()
         self.create_MAIN()
 
@@ -299,10 +298,13 @@ class Application(tk.Frame):
             self.pause()
             root.config(cursor="heart")
             answer = askquestion("LOOSER !", "TRY AGAIN?")
+            
             if answer == "yes":
+                self.score.save(self.hero)
                 root.config(cursor="none")
                 self.init_game(fullreset=True)
             else:
+                
                 self.end()
 
     def resetPV(self):
@@ -379,6 +381,7 @@ class Application(tk.Frame):
         self.music.stop()
         self.music.join()
         self.master.destroy()
+        self.score.save(self.hero)
 
         exit(0)
 
