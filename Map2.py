@@ -63,6 +63,7 @@ class Application(tk.Frame):
             vague = 1
             self.hero.setPV()
             self.resetPV()
+            self.hero.setScore(0)
         
         self.init_ennemyList()
         self.vague()
@@ -262,6 +263,7 @@ class Application(tk.Frame):
                 self.updategif(idlic, self.canvas[row], unicorn, looptime=50)
 
     def moveEnnemy(self, idlic, canvas, img_offset=-1):
+        global vague
         if pause:
             canvas.after(75, lambda: self.moveEnnemy(idlic, canvas, img_offset))
         else:
@@ -271,7 +273,7 @@ class Application(tk.Frame):
                     canvas.delete(idlic)
 
                 else:
-                    canvas.move(idlic, -30, 0)
+                    canvas.move(idlic, -30-vague*10, 0)
 
                     # get current position
                     x1, y = canvas.coords(idlic)
@@ -281,7 +283,6 @@ class Application(tk.Frame):
                         dead = Sound("deaduni.mp3",stop=True).start()
                         self.ennemies -= 1
                         if self.ennemies == 0:
-                            global vague
                             vague += 1
                             self.init_game()
 
@@ -291,10 +292,9 @@ class Application(tk.Frame):
     def updatePV(self, pvDIFF):
         self.hero.setPV(self.hero.getPV() + pvDIFF)
         pv = self.hero.getPV()
-        if pv + pvDIFF <= 100:
-            pvscale = pv / 100 * self.hp_canvas.winfo_width()
-            self.hp_canvas.delete("all")
-            self.hp_canvas.create_rectangle(0, 0, pvscale, 50, fill="green")
+        pvscale = pv / 100 * self.hp_canvas.winfo_width()
+        self.hp_canvas.delete("all")
+        self.hp_canvas.create_rectangle(0, 0, pvscale, 50, fill="green")
         if pv <= 0:
             self.pause()
             root.config(cursor="heart")
@@ -322,13 +322,14 @@ class Application(tk.Frame):
         return False
 
     def update_background(self, canvas):
+        global vague
         if pause:
             canvas.after(50, lambda: self.update_background(canvas))
         else:
 
-            canvas.move('bg_star', -20, 0)
-            canvas.move('bg_planet', -2, 0)
-            canvas.move('bg_planet_circle', -2, 0)
+            canvas.move('bg_star', -20-vague*5, 0)
+            canvas.move('bg_planet', -2-vague*2, 0)
+            canvas.move('bg_planet_circle', -2-vague*2, 0)
             for star in canvas.find_withtag('bg_star'):
                 x = canvas.coords(star)
                 if x[0] < 0:
@@ -367,7 +368,7 @@ class Application(tk.Frame):
                     i += 1
             canvas.tag_lower("bg_planet")
 
-            canvas.after(50, lambda: self.update_background(canvas))
+            canvas.after(50-vague*5, lambda: self.update_background(canvas))
 
     def getIDfromTag(self, tag, ids, canvas):
         for tags in ids:

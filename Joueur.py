@@ -15,7 +15,10 @@ class Joueur:
         self.y = y
 
     def setPV(self, pv=100):
-        self.pv = pv
+        if pv>100:
+            self.pv = 100
+        else:
+            self.pv = pv
 
     def getPosX(self):
         return self.x
