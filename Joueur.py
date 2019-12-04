@@ -3,6 +3,7 @@ class Joueur:
         self.x = 0
         self.y = 0
         self.pv = 100
+        self.score = 0
 
     def getPV(self):
         return self.pv
@@ -18,3 +19,10 @@ class Joueur:
 
     def getPosX(self):
         return self.x
+        
+    def getScore(self):
+        return self.score
+    
+    def setScore(self,score):
+        self.score = score
+        

@@ -69,6 +69,7 @@ class Application(tk.Frame):
         self.initEnnemies()
         self.drawEnnemies()
         self.printWave()
+        self.printScore()
         if fullreset:
             self.displayCommands()
 
@@ -121,6 +122,16 @@ class Application(tk.Frame):
                                        text=text, fill="RED", font=font, tag="wave")
         else:
             self.canvas[0].itemconfigure(self.canvas[0].find_withtag("wave"), text=text)
+            
+    def printScore(self):
+        font = tkFont.Font(family='Helvetica', size=36, weight='bold')
+
+        text = "Score {}".format(self.hero.getScore())
+        if len(self.canvas[0].find_withtag("score")) == 0:
+            self.canvas[0].create_text(self.canvas[0].winfo_width() -200, 36,
+                                       text=text, fill="WHITE", font=font, tag="score")
+        else:
+            self.canvas[0].itemconfigure(self.canvas[0].find_withtag("score"), text=text)
 
     def moveDown(self, event=None):
         x = self.hero.getPosX() + self.frameHeros.winfo_height() / 5
@@ -180,6 +191,7 @@ class Application(tk.Frame):
             self.rows[i] += 1
 
     def moveTir(self, idt, canvas):
+        global vague
         if pause:
             canvas.after(10, lambda: self.moveTir(idt, canvas))
         else:
@@ -191,13 +203,14 @@ class Application(tk.Frame):
                 tpl = canvas.find_overlapping(x, y, x, y + 130)
 
                 if self.tagged("bullet", tpl, canvas) and self.tagged("uni", tpl, canvas):
-                    dead = Sound("deaduni2.mp3",stop=True).start()
+                    #playsound("deaduni2.mp3", False)
                     canvas.itemconfig(self.getIDfromTag("uni", tpl, canvas), image=dead, tags="dead")
                     canvas.delete(self.getIDfromTag("bullet", tpl, canvas))
                     self.updatePV(1)
                     self.ennemies -= 1
+                    self.hero.setScore(self.hero.getScore()+vague)
+                    self.printScore()
                     if self.ennemies <= 0:
-                        global vague
                         vague += 1
                         self.init_game()
 
