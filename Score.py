@@ -9,11 +9,19 @@ class Score:
         """
         self.scores = dict()
         if exists("score.txt"):
-            with open("score.txt", "r") as fichierR:
-                for line in fichierR.readlines():
-                    if line != "\n":
-                        nom, score = line.split(";")
-                        self.scores[nom] = int(score)
+
+                with open("score.txt", "r") as fichierR:
+                    for line in fichierR.readlines():
+                        if line != "\n":
+                            try:
+                                nom, score = line.split(";")
+                            except ValueError:
+                                print("Error reading file...\n Some data might have been deleted")
+                            else:
+                                self.scores[nom] = int(score)
+
+
+
 
     def save(self, joueur):
         """
