@@ -1,9 +1,11 @@
 # UnicornDestroy
  _School project for ESIEE Paris E3FIC_
  
+  _Guideline : Shoot them up_ 
+  
  Authors : Rafaël MIOLLAN and Pierre-Yves OUPINDRIN
  
- _Guideline : Shoot them up_ 
+
 ## Requirements
 - playsound library (pip install playsound) 
 - python 3 (tested only on 3.6)
