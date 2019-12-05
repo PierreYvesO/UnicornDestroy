@@ -1,37 +1,27 @@
-import random
-
-import sys
-
 from threading import Thread
-
-import time
-
 from playsound import playsound
 
 
 class Sound(Thread):
 
-
-    """Thread chargé simplement d'afficher une lettre dans la console."""
-
-
-    def __init__(self,musicpath,stop=False ):
-
+    def __init__(self, musicpath, stop=False):
+        """
+        Initialise le chemin de la musique et active le mode daemon pour forcer le lien avec le processus père lors
+        de sa mort
+         @param musicpath: chemin de la musique
+         @param stop: si le doit être ponctuel
+        """
         Thread.__init__(self)
+        self.daemon = True
         self.stopnext = stop
         self.musicpath = musicpath
 
-
     def run(self):
-
-        """Code à exécuter pendant l'exécution du thread."""
+        """
+        Boucle infinie qui joue le son
+        @return:
+        """
         while True:
             playsound(self.musicpath)
             if self.stopnext:
                 break
-
-    def stop(self):
-        self.stopnext = True
-           
-
-        

@@ -1,0 +1,35 @@
+tsta wave limit;1405
+tst wave limit;1405
+tstaa wave limit;1405
+Anoanymous;873
+Anonymous;873
+Anoaanymous;873
+Anaonymous;873
+testa;435
+test;435
+teasta;435
+taest;435
+joaueur;134
+joueur;134
+jaoaueur;134
+jaoueur;134
+Joaueur1;2
+azeaazeazeazeaze;2
+Joueur1;2
+azeazeazeazeaze;2
+Jaoaueur1;2
+aazeaazeazeazeaze;2
+Jaoueur1;2
+aazeazeazeazeaze;2
+*;0
+ha;0
+HHaHHHHHHHHHHHH;0
+$a*;0
+h;0
+HHHHHHHHHHHHHH;0
+$*;0
+haa;0
+HaHaHHHHHHHHHHHH;0
+$aa*;0
+HaHHHHHHHHHHHHH;0
+a$*;0
