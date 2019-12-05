@@ -13,6 +13,7 @@
 - fingers ?
 
 Works on Linux and Windows
+
 Not tested on MacOSx but it should be ok
 
 ## How to play
