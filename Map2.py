@@ -655,7 +655,7 @@ class Application(tk.Frame):
         @param event:
         @return:
         """
-        if len(self.canvas[0].find_withtag("help")) == 1:
+        if len(self.canvas[0].find_withtag("help")) >= 1:
             self.removeCommands()
         else:
             self.displayCommands()
@@ -681,7 +681,7 @@ class Application(tk.Frame):
         @return:
         """
         for canvas in self.canvas:
-            canvas.delete(canvas.find_withtag("help")[0])
+            canvas.delete("help")
 
     def updateEnnemies(self):
         """
