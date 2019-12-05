@@ -1,6 +1,8 @@
 # UnicornDestroy
  _School project for ESIEE Paris E3FIC_
  
+ Authors : Rafaël MIOLLAN and Pierre-Yves OUPINDRIN
+ 
  _Guideline : Shoot them up_ 
 ## Requirements
 - playsound library (pip install playsound) 
