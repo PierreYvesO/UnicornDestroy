@@ -248,12 +248,12 @@ class Application(tk.Frame):
         @return:
         """
         font = tkFont.Font(family='Helvetica', size=36, weight='bold')
-        text_2 = "Score {}".format(self.hero.getScore())
+        text = "Score {}".format(self.hero.getScore())
 
         # Si le texte est deja present sur l'image on le modifie sinon on le créé
         if len(self.canvas[0].find_withtag("score")) == 0:
             self.canvas[0].create_text(self.canvas[0].winfo_width() - 200, 36,
-                                       text=text_2, fill="WHITE", font=font, tag="score")
+                                       text=text, fill="WHITE", font=font, tag="score")
         else:
             self.canvas[0].itemconfigure(self.canvas[0].find_withtag("score"), text=text)
 
