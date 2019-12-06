@@ -9,6 +9,7 @@
 ## Requirements
 - playsound library (pip install playsound) 
 - python 3 (tested only on 3.6)
+- Works better for 1920x1080 resolutions
 - keyboard & mouse
 - fingers ?
 
