@@ -14,6 +14,7 @@
 - fingers ?
 
 Works on Windows
+
 Should have no issue on Linux and OSX
 
 ## How to play
