@@ -15,7 +15,7 @@
 
 Works on Windows
 
-Should have no issue on Linux and OSX
+Not fully tested on Linux and OSX
 
 ## How to play
 from command line execute Map.py
