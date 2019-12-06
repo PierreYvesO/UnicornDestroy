@@ -18,7 +18,7 @@ def ask_name():
     """
     root.config(cursor="heart")
     name = askstring("Name ?", "Enter your name")
-    root.config(cursor="None")
+    root.config(cursor="none")
 
     if name is None or name is "":
         return 'Anonymous'
